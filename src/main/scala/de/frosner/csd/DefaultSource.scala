@@ -3,34 +3,23 @@ package de.frosner.csd
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.FileStatus
 import org.apache.hadoop.mapreduce.Job
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{SQLContext, SparkSession}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.execution.datasources.{FileFormat, OutputWriterFactory, PartitionedFile}
-import org.apache.spark.sql.sources.Filter
+import org.apache.spark.sql.sources.{BaseRelation, Filter, RelationProvider, SchemaRelationProvider}
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
-class DefaultSource extends FileFormat {
 
-  override def inferSchema(sparkSession: SparkSession, options: Map[String, String], files: Seq[FileStatus]): Option[StructType] = {
-    Some(StructType(
-      StructField("line", StringType, nullable = true) :: Nil
-    ))
+class DefaultSource extends RelationProvider with SchemaRelationProvider {
+
+  override def createRelation(sqlContext: SQLContext, parameters: Map[String, String]): BaseRelation = {
+    createRelation(sqlContext, parameters, null)
   }
 
-  override def prepareWrite(sparkSession: SparkSession, job: Job, options: Map[String, String], dataSchema: StructType): OutputWriterFactory = {
-    throw new UnsupportedOperationException("Writing is not supported!")
-  }
-
-  override def buildReader(sparkSession: SparkSession,
-                           dataSchema: StructType,
-                           partitionSchema: StructType,
-                           requiredSchema: StructType,
-                           filters: Seq[Filter],
-                           options: Map[String, String],
-                           hadoopConf: Configuration
-                          ): (PartitionedFile) => Iterator[InternalRow] = { pf =>
-    Iterator(InternalRow(UTF8String.fromString(pf.filePath)))
+  override def createRelation(sqlContext: SQLContext, parameters: Map[String, String], schema: StructType): BaseRelation = {
+    parameters.getOrElse("path", sys.error("'path' must be specified for our data."))
+    return new CsdRelation(parameters.get("path").get, schema)(sqlContext)
   }
 
 }

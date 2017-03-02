@@ -9,7 +9,8 @@ class DefaultSourceSpec extends FlatSpec with Matchers {
     val spark = SparkSession.builder.master("local").getOrCreate
     try {
       val df = spark.read.format("de.frosner.csd").load("src/test/resources/example.csd")
-      df.show
+      df.printSchema()
+      df.show()
     } finally {
       spark.stop
     }
