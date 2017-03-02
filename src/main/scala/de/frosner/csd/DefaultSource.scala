@@ -14,12 +14,16 @@ import org.apache.spark.unsafe.types.UTF8String
 class DefaultSource extends RelationProvider with SchemaRelationProvider {
 
   override def createRelation(sqlContext: SQLContext, parameters: Map[String, String]): BaseRelation = {
-    createRelation(sqlContext, parameters, null)
+    createRelation(sqlContext, parameters, None)
   }
 
   override def createRelation(sqlContext: SQLContext, parameters: Map[String, String], schema: StructType): BaseRelation = {
+    createRelation(sqlContext, parameters, Some(schema))
+  }
+
+  private def createRelation(sqlContext: SQLContext, parameters: Map[String, String], schema: Option[StructType]): BaseRelation = {
     parameters.getOrElse("path", sys.error("'path' must be specified for our data."))
-    return new CsdRelation(parameters.get("path").get, schema)(sqlContext)
+    new CsdRelation(parameters.get("path").get, schema)(sqlContext)
   }
 
 }

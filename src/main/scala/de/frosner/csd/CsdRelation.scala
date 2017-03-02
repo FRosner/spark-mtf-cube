@@ -5,19 +5,17 @@ import org.apache.spark.sql.{Row, SQLContext}
 import org.apache.spark.sql.sources.{BaseRelation, TableScan}
 import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructType}
 
-class CsdRelation(location: String, userSchema: StructType)
+class CsdRelation(location: String, userSchema: Option[StructType])
                  (@transient val sqlContext: SQLContext) extends BaseRelation with TableScan with Serializable {
 
   val sparkContext = sqlContext.sparkContext
 
   override def schema: StructType = {
-    if (this.userSchema != null) {
-      this.userSchema
-    } else {
+    userSchema.getOrElse(
       StructType(Seq(
         StructField("string", StringType, nullable = true)
       ))
-    }
+    )
   }
 
   override def buildScan(): RDD[Row] = {
