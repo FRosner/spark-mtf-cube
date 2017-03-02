@@ -8,6 +8,8 @@ import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructT
 class CsdRelation(location: String, userSchema: StructType)
                  (@transient val sqlContext: SQLContext) extends BaseRelation with TableScan with Serializable {
 
+  val sparkContext = sqlContext.sparkContext
+
   override def schema: StructType = {
     if (this.userSchema != null) {
       this.userSchema
@@ -19,10 +21,10 @@ class CsdRelation(location: String, userSchema: StructType)
   }
 
   override def buildScan(): RDD[Row] = {
-    val rdd = sqlContext
-      .sparkContext
-      .textFile(location)
-    val rows = rdd.map(line => Row.fromSeq(Seq(line)))
+    val byteRecords = sparkContext
+      .binaryRecords(location, 2, sparkContext.hadoopConfiguration)
+    val strings = byteRecords.map(bytes => new String(bytes.map(_.toChar)))
+    val rows = strings.map(string => Row.fromSeq(Seq(string)))
     rows
   }
 
