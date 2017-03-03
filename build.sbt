@@ -2,7 +2,7 @@ organization  := "de.frosner"
 
 version       := "0.1.0-SNAPSHOT"
 
-name          := "custom-spark-datasource"
+name          := "spark-mtf-cube"
 
 scalaVersion  := "2.11.8"
 
