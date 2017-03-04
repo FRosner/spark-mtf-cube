@@ -18,7 +18,7 @@ libraryDependencies += "org.apache.spark" %% "spark-hive" % sparkVersion.value %
 
 resolvers += "Sonatype Public" at "https://oss.sonatype.org/content/groups/public/"
 
-libraryDependencies += "org.scodec" %% "scodec-bits" % "1.1.2"
+libraryDependencies += "org.scodec" %% "scodec-core" % "1.10.3" // see http://scodec.org/releases/ if using cross version build
 
 fork := true
 
