@@ -8,7 +8,7 @@ import scodec.bits.ByteOrdering
 
 class DefaultSourceSpec extends FlatSpec with Matchers {
 
-  "The DefaultSource" should "infer the schema correctly" in {
+  "The DefaultSource" should "load a single small file containing one record correctly" in {
     val spark = SparkSession.builder.master("local").getOrCreate
     val df = spark.read.format("de.frosner.spark.mtf")
         .option(DefaultSource.NumTimesKey, "1")
@@ -16,8 +16,24 @@ class DefaultSourceSpec extends FlatSpec with Matchers {
         .option(DefaultSource.NumScenariosKey, "1")
         .option(DefaultSource.EndianTypeKey, "LittleEndian")
         .option(DefaultSource.ValueTypeKey, "FloatType")
-        .load("src/test/resources/example.dat.0")
+        .load("src/test/resources/small")
     df.show()
+    println(df.rdd.partitions.mkString("\n"))
+    df.count() shouldBe 1
+  }
+
+  it should "read multiple files correctly" in {
+    val spark = SparkSession.builder.master("local").getOrCreate
+    val df = spark.read.format("de.frosner.spark.mtf")
+      .option(DefaultSource.NumTimesKey, "1")
+      .option(DefaultSource.NumInstrumentsKey, "1")
+      .option(DefaultSource.NumScenariosKey, "1")
+      .option(DefaultSource.EndianTypeKey, "LittleEndian")
+      .option(DefaultSource.ValueTypeKey, "FloatType")
+      .load("src/test/resources/multifile")
+    df.show()
+    println(df.rdd.partitions.mkString("\n"))
+    df.count() shouldBe 4
   }
 
   "Long input parameter validation" should "validate correctly" in {

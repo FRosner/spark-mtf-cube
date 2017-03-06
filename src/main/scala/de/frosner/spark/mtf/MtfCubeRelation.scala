@@ -1,7 +1,7 @@
 package de.frosner.spark.mtf
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{Row, SQLContext}
+import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import org.apache.spark.sql.sources.{BaseRelation, TableScan}
 import org.apache.spark.sql.types._
 import scodec.bits.{BitVector, ByteOrdering}
@@ -26,6 +26,8 @@ case class MtfCubeRelation(location: String,
     "Currently only double (8 byte) and float (4 byte) encoding is supported."
   )
 
+  @transient val dataLocation = location + "/cube.dat.*"
+
   val (recordWidth, codec) = if (valueType == FloatType) {
     (4, if (endianType == ByteOrdering.LittleEndian) Codecs.floatL else Codecs.float)
   } else if (valueType == DoubleType) {
@@ -47,20 +49,16 @@ case class MtfCubeRelation(location: String,
     val sparkContext = sqlContext.sparkContext
     if (valueType == FloatType) {
       val recordWidth = 4
-      val byteRecords = sparkContext.binaryRecords(location, recordWidth, sparkContext.hadoopConfiguration)
+      val byteRecords = sparkContext.binaryRecords(dataLocation, recordWidth, sparkContext.hadoopConfiguration)
       val codec = if (endianType == ByteOrdering.LittleEndian) SerializableCodec.FloatL else SerializableCodec.Float
       val values = byteRecords.map(decodeBytes[Float](codec))
-      val valuesWithIndex = values.zipWithIndex()
-      val rows = values.map(value => Row.fromSeq(Seq("i", "s", value))) // TODO avoid code duplication
-      rows
+      convertValuesToDf(values)
     } else if (valueType == DoubleType) {
       val recordWidth = 8
-      val byteRecords = sparkContext.binaryRecords(location, recordWidth, sparkContext.hadoopConfiguration)
+      val byteRecords = sparkContext.binaryRecords(dataLocation, recordWidth, sparkContext.hadoopConfiguration)
       val codec = if (endianType == ByteOrdering.LittleEndian) SerializableCodec.DoubleL else SerializableCodec.Double
       val values = byteRecords.map(decodeBytes[Double](codec))
-      val valuesWithIndex = values.zipWithIndex()
-      val rows = values.map(value => Row.fromSeq(Seq("i", "s", value)))
-      rows
+      convertValuesToDf(values)
     } else {
       throw new IllegalStateException(s"Unexpected value type: $valueType")
     }
@@ -80,6 +78,14 @@ object MtfCubeRelation {
           value
       case Failure(cause) => throw new DecodingFailedException(cause)
     }
+  }
+
+  def convertValuesToDf[T](values: RDD[T]): RDD[Row] = {
+    val valuesWithIndex = values.zipWithIndex()
+    val rows = valuesWithIndex.map {
+      case (value, index) => Row.fromSeq(Seq(index.toString, "s", value))
+    }
+    rows
   }
 
 }

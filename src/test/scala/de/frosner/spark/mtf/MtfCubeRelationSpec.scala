@@ -33,7 +33,7 @@ class MtfCubeRelationSpec extends FlatSpec with Matchers {
 
   "Build scan" should "work" in {
     val relation = MtfCubeRelation(
-      location = "src/test/resources/example.dat.0",
+      location = "src/test/resources/small",
       numTime = 1,
       numInstruments = 1,
       numScenarious = 1,

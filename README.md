@@ -8,11 +8,25 @@ Spark data source for [Mark to Future](http://www.cfapubs.org/doi/pdf/10.2469/di
 
 ## Usage
 
+### Reading Data
+
+```scala
+val df = spark.read.format("de.frosner.spark.mtf")
+    .option("numTimes", "1")
+    .option("numInstruments", "1")
+    .option("numScenarios", "1")
+    .option("endianType", "LittleEndian")
+    .option("valueType", "FloatType")
+    .load("src/test/resources/small")
+df.show()
+```
 
 
 ## Data Source Format
 
 Cube files consist of a meta data file (XML) and a data file (binary encoded sequence of numerics).
+All files are expected to be located in the same folder without any subdirectories.
+The meta data file needs to be called `cube.csr`, while the data files are called `cube.dat.*`.
 
 ### Meta Data
 
