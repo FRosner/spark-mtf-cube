@@ -11,16 +11,16 @@ import MtfCubeRelation._
 import org.apache.hadoop.conf.Configuration
 
 case class MtfCubeRelation(location: String,
-                      numTime: Long,
-                      numInstruments: Long,
-                      numScenarious: Long,
-                      endianType: ByteOrdering,
-                      valueType: DataType)
+                           numTimes: Long,
+                           numInstruments: Long,
+                           numScenarios: Long,
+                           endianType: ByteOrdering,
+                           valueType: DataType)
                      (@transient val sqlContext: SQLContext) extends BaseRelation with TableScan with Serializable {
 
-  require(numTime > 0, "'numTime' must be positive")
+  require(numTimes > 0, "'numTimes' must be positive")
   require(numInstruments > 0, "'numInstruments' must be positive")
-  require(numScenarious > 0, "'numScenarious' must be positive")
+  require(numScenarios > 0, "'numScenarios' must be positive")
   require(
     valueType == DoubleType || valueType == FloatType,
     "Currently only double (8 byte) and float (4 byte) encoding is supported."
@@ -53,13 +53,13 @@ case class MtfCubeRelation(location: String,
       val byteRecords = sparkContext.binaryRecords(dataLocation, recordWidth, sparkContext.hadoopConfiguration)
       val codec = if (endianType == ByteOrdering.LittleEndian) SerializableCodec.FloatL else SerializableCodec.Float
       val values = byteRecords.map(decodeBytes[Float](codec))
-      convertValuesToDf(values)
+      convertValuesToDf(values, numTimes, numInstruments, numScenarios)
     } else if (valueType == DoubleType) {
       val recordWidth = 8
       val byteRecords = sparkContext.binaryRecords(dataLocation, recordWidth, sparkContext.hadoopConfiguration)
       val codec = if (endianType == ByteOrdering.LittleEndian) SerializableCodec.DoubleL else SerializableCodec.Double
       val values = byteRecords.map(decodeBytes[Double](codec))
-      convertValuesToDf(values)
+      convertValuesToDf(values, numTimes, numInstruments, numScenarios)
     } else {
       throw new IllegalStateException(s"Unexpected value type: $valueType")
     }
@@ -81,10 +81,14 @@ object MtfCubeRelation {
     }
   }
 
-  def convertValuesToDf[T](values: RDD[T]): RDD[Row] = {
+  def convertValuesToDf[T](values: RDD[T], numTimes: Long, numInstruments: Long, numScenarios: Long): RDD[Row] = {
     val valuesWithIndex = values.zipWithIndex()
     val rows = valuesWithIndex.map {
-      case (value, index) => Row.fromSeq(Seq(index.toString, "i", "s", value))
+      case (value, index) =>
+        val timeIndex = index / (numInstruments * numScenarios) % numTimes
+        val instrumentIndex = index / numScenarios % numInstruments
+        val scenarioIndex = index % numScenarios
+        Row.fromSeq(Seq(timeIndex.toString, instrumentIndex.toString, scenarioIndex.toString, value))
     }
     rows
   }
