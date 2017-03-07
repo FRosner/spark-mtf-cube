@@ -28,14 +28,6 @@ case class MtfCubeRelation(location: String,
 
   @transient val dataLocation = location + "/cube.dat.*"
 
-  val (recordWidth, codec) = if (valueType == FloatType) {
-    (4, if (endianType == ByteOrdering.LittleEndian) Codecs.floatL else Codecs.float)
-  } else if (valueType == DoubleType) {
-    (8, if (endianType == ByteOrdering.LittleEndian) Codecs.doubleL else Codecs.double)
-  } else {
-    throw new IllegalStateException(s"Unexpected value type: $valueType")
-  }
-
 //  "INSTRUMENT" "SCENARIO" "WEIGHT" "SIMULATION DATE" "VALUE"
   override def schema: StructType = {
     StructType(Seq(
