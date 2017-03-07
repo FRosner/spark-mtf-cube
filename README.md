@@ -21,6 +21,14 @@ val df = spark.read.format("de.frosner.spark.mtf")
 df.show()
 ```
 
+### Schema
+
+Column | Description
+--- | ---
+Time | Simulation time dimension of the cube
+Instrument | Instrument dimension of the cube
+Scenario | Scenario dimension of the cube
+Value | Simulated value
 
 ## Data Source Format
 

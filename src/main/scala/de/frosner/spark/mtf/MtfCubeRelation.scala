@@ -39,6 +39,7 @@ case class MtfCubeRelation(location: String,
 //  "INSTRUMENT" "SCENARIO" "WEIGHT" "SIMULATION DATE" "VALUE"
   override def schema: StructType = {
     StructType(Seq(
+      StructField("Time", StringType, nullable = false),
       StructField("Instrument", StringType, nullable = false),
       StructField("Scenario", StringType, nullable = false),
       StructField("Value", valueType, nullable = false)
@@ -83,7 +84,7 @@ object MtfCubeRelation {
   def convertValuesToDf[T](values: RDD[T]): RDD[Row] = {
     val valuesWithIndex = values.zipWithIndex()
     val rows = valuesWithIndex.map {
-      case (value, index) => Row.fromSeq(Seq(index.toString, "s", value))
+      case (value, index) => Row.fromSeq(Seq(index.toString, "i", "s", value))
     }
     rows
   }
