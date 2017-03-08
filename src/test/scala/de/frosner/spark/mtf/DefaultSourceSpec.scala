@@ -16,7 +16,7 @@ class DefaultSourceSpec extends FlatSpec with Matchers {
         .option(DefaultSource.NumScenariosKey, "1")
         .option(DefaultSource.EndianTypeKey, "LittleEndian")
         .option(DefaultSource.ValueTypeKey, "FloatType")
-        .load("src/test/resources/small")
+        .load("src/test/resources/small/cube.dat.0")
     df.count() shouldBe 1
   }
 
@@ -28,7 +28,7 @@ class DefaultSourceSpec extends FlatSpec with Matchers {
       .option(DefaultSource.NumScenariosKey, "2")
       .option(DefaultSource.EndianTypeKey, "LittleEndian")
       .option(DefaultSource.ValueTypeKey, "FloatType")
-      .load("src/test/resources/multifile")
+      .load("src/test/resources/multifile/cube.dat.*")
     df.count() shouldBe 4
   }
 
@@ -40,7 +40,7 @@ class DefaultSourceSpec extends FlatSpec with Matchers {
       .option(DefaultSource.NumScenariosKey, "2")
       .option(DefaultSource.EndianTypeKey, "BigEndian")
       .option(DefaultSource.ValueTypeKey, "DoubleType")
-      .load("src/test/resources/big")
+      .load("src/test/resources/big/cube.dat.0")
     val result = df.select("Time", "Instrument", "Scenario").collect()
     result shouldBe Array(
       Row.fromSeq(Seq("0", "0", "0")),
@@ -70,7 +70,7 @@ class DefaultSourceSpec extends FlatSpec with Matchers {
       .option(DefaultSource.NumScenariosKey, "2")
       .option(DefaultSource.EndianTypeKey, "BigEndian")
       .option(DefaultSource.ValueTypeKey, "DoubleType")
-      .load("src/test/resources/big")
+      .load("src/test/resources/big/cube.dat.0")
     val result = df.select("Time", "Instrument", "Scenario").collect()
     result shouldBe Array(
       Row.fromSeq(Seq("0", "0", "0")),
@@ -100,7 +100,7 @@ class DefaultSourceSpec extends FlatSpec with Matchers {
       .option(DefaultSource.NumScenariosKey, "4")
       .option(DefaultSource.EndianTypeKey, "BigEndian")
       .option(DefaultSource.ValueTypeKey, "DoubleType")
-      .load("src/test/resources/big")
+      .load("src/test/resources/big/cube.dat.0")
     val result = df.select("Time", "Instrument", "Scenario").collect()
     result shouldBe Array(
       Row.fromSeq(Seq("0", "0", "0")),
@@ -132,7 +132,7 @@ class DefaultSourceSpec extends FlatSpec with Matchers {
         .option(DefaultSource.EndianTypeKey, "LittleEndian")
         .option(DefaultSource.ValueTypeKey, "FloatType")
         .option(DefaultSource.CheckCubeKey, "true")
-        .load("src/test/resources/small").count
+        .load("src/test/resources/small/cube.dat.0").count
     }
   }
 
@@ -145,8 +145,50 @@ class DefaultSourceSpec extends FlatSpec with Matchers {
       .option(DefaultSource.EndianTypeKey, "LittleEndian")
       .option(DefaultSource.ValueTypeKey, "FloatType")
       .option(DefaultSource.CheckCubeKey, "false")
-      .load("src/test/resources/small")
+      .load("src/test/resources/small/cube.dat.0")
     cube.count shouldBe 1
+  }
+
+  "Reading the meta data XML" should "work" in {
+    val spark = SparkSession.builder.master("local").getOrCreate
+    val df = spark.read.format("de.frosner.spark.mtf")
+      .option("csrFile", "src/test/resources/withxml/cube.csr")
+      .load("src/test/resources/withxml/cube.dat.0")
+    val scenario1 = "Base Scenario"
+    val scenario2 = "MC_1"
+    val scenario3 = "MC_2"
+    val scenario4 = "MC_3"
+    val scenario5 = "MC_4"
+    val instrument1 = "Instrument 1"
+    val instrument2 = "Instrument 2"
+    val instrument3 = "Instrument 3"
+    val time1 = "2000/01/01 (0)"
+    df.collect shouldBe Array(
+      Row.fromSeq(Seq(time1, instrument1, scenario1, 0f)),
+      Row.fromSeq(Seq(time1, instrument1, scenario2, 0f)),
+      Row.fromSeq(Seq(time1, instrument1, scenario3, 0f)),
+      Row.fromSeq(Seq(time1, instrument1, scenario4, 0f)),
+      Row.fromSeq(Seq(time1, instrument1, scenario5, 0f)),
+      Row.fromSeq(Seq(time1, instrument2, scenario1, 0f)),
+      Row.fromSeq(Seq(time1, instrument2, scenario2, 0f)),
+      Row.fromSeq(Seq(time1, instrument2, scenario3, 0f)),
+      Row.fromSeq(Seq(time1, instrument2, scenario4, 0f)),
+      Row.fromSeq(Seq(time1, instrument2, scenario5, 0f)),
+      Row.fromSeq(Seq(time1, instrument3, scenario1, 0f)),
+      Row.fromSeq(Seq(time1, instrument3, scenario2, 0f)),
+      Row.fromSeq(Seq(time1, instrument3, scenario3, 0f)),
+      Row.fromSeq(Seq(time1, instrument3, scenario4, 0f)),
+      Row.fromSeq(Seq(time1, instrument3, scenario5, 0f))
+    )
+  }
+
+  it should "throw an error if the metadata cannot be read" in {
+    val spark = SparkSession.builder.master("local").getOrCreate
+    intercept[InvalidMetaDataException] {
+      spark.read.format("de.frosner.spark.mtf")
+        .option("csrFile", "src/test/resources/withxml/cube.csr.notexisting")
+        .load("src/test/resources/withxml/cube.dat.0").count()
+    }
   }
 
   "Long input parameter validation" should "validate correctly" in {

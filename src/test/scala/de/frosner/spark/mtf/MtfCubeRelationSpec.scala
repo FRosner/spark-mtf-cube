@@ -1,6 +1,6 @@
 package de.frosner.spark.mtf
 
-import org.apache.spark.sql.{SQLContext, SparkSession}
+import org.apache.spark.sql.{Row, SQLContext, SparkSession}
 import org.apache.spark.sql.types.{DataType, DoubleType, FloatType}
 import org.scalatest.{FlatSpec, Matchers}
 import scodec.bits.ByteOrdering
@@ -41,7 +41,9 @@ class MtfCubeRelationSpec extends FlatSpec with Matchers {
       valueType = FloatType,
       checkCubeSize = false
     )(SparkSession.builder().master("local").getOrCreate().sqlContext)
-    relation.buildScan().foreach(println)
+    relation.buildScan().collect shouldBe Array(
+      Row.fromSeq(Seq("1", "1", "1", 0f))
+    )
   }
 
 }

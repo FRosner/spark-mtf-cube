@@ -26,8 +26,6 @@ case class MtfCubeRelation(location: String,
     "Currently only double (8 byte) and float (4 byte) encoding is supported."
   )
 
-  @transient val dataLocation = location + "/cube.dat.*"
-
   override def schema: StructType = {
     StructType(Seq(
       StructField("Time", StringType, nullable = false),
@@ -42,13 +40,13 @@ case class MtfCubeRelation(location: String,
     val expectedCubeSize = times.size.toLong * instruments.size.toLong * scenarios.size.toLong
     val cube = if (valueType == FloatType) {
       val recordWidth = 4
-      val byteRecords = sparkContext.binaryRecords(dataLocation, recordWidth, sparkContext.hadoopConfiguration)
+      val byteRecords = sparkContext.binaryRecords(location, recordWidth, sparkContext.hadoopConfiguration)
       val codec = if (endianType == ByteOrdering.LittleEndian) SerializableCodec.FloatL else SerializableCodec.Float
       val values = byteRecords.map(decodeBytes[Float](codec))
       convertValuesToDf(values, times, instruments, scenarios)
     } else if (valueType == DoubleType) {
       val recordWidth = 8
-      val byteRecords = sparkContext.binaryRecords(dataLocation, recordWidth, sparkContext.hadoopConfiguration)
+      val byteRecords = sparkContext.binaryRecords(location, recordWidth, sparkContext.hadoopConfiguration)
       val codec = if (endianType == ByteOrdering.LittleEndian) SerializableCodec.DoubleL else SerializableCodec.Double
       val values = byteRecords.map(decodeBytes[Double](codec))
       convertValuesToDf(values, times, instruments, scenarios)

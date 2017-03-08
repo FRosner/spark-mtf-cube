@@ -13,26 +13,18 @@ import DefaultSource._
 import scodec.bits.ByteOrdering
 
 import scala.util.{Failure, Success, Try}
+import scala.xml.XML
 
 
 class DefaultSource extends RelationProvider with SchemaRelationProvider {
 
   override def createRelation(sqlContext: SQLContext, parameters: Map[String, String]): BaseRelation = {
-    val path = parameters.get("path") match {
-      case Some(p) if !p.isEmpty => p
-      case other => throw new IllegalArgumentException("'path' must be specified.")
-    }
-    val csrPath = parameters.get("csrPath")
-    if (csrPath.isDefined) {
-      ???
-    } else {
-      val times = validateAndGetFromInt(parameters, NumTimesKey)
-      val instruments = validateAndGetFromInt(parameters, NumInstrumentsKey)
-      val scenarios = validateAndGetFromInt(parameters, NumScenariosKey)
-      val endianType = validateAndGetEndianType(parameters)
-      val valueType = validateAndGetValueType(parameters)
-      val checkCube = validateAndGetCheckCube(parameters)
-      new MtfCubeRelation(path, times, instruments, scenarios, endianType, valueType, checkCube)(sqlContext)
+    val path = validateAndGetPath(parameters)
+    val checkCube = validateAndGetCheckCube(parameters)
+    val csrPathParameter = parameters.get("csrFile")
+    csrPathParameter match {
+      case Some(csrPath) => createRelationWithMetaDataFile(csrPath, path, checkCube, sqlContext)
+      case None => createRelationWithoutMetaDataFile(parameters, path, checkCube, sqlContext)
     }
 
   }
@@ -52,6 +44,13 @@ object DefaultSource {
   val ValueTypeKey = "valueType"
   val CheckCubeKey = "checkCube"
   val CheckCubeDefault = false
+
+  def validateAndGetPath(parameters: Map[String, String]): String = {
+    parameters.get("path") match {
+      case Some(p) if !p.isEmpty => p
+      case other => throw new IllegalArgumentException("'path' must be specified.")
+    }
+  }
 
   def validateAndGetFromInt(parameters: Map[String, String], parameter: String): IndexedSeq[String] = {
     parameters.get(parameter) match {
@@ -94,6 +93,61 @@ object DefaultSource {
       case Some(s) if s.toLowerCase == "false" => false
       case Some(other) => throw new IllegalArgumentException(s"'$parameter' expected to be either false or true but got '$other'")
       case None => CheckCubeDefault
+    }
+  }
+
+  def createRelationWithoutMetaDataFile(parameters: Map[String, String], path: String, checkCube: Boolean, sqlContext: SQLContext): MtfCubeRelation = {
+    val times = validateAndGetFromInt(parameters, NumTimesKey)
+    val instruments = validateAndGetFromInt(parameters, NumInstrumentsKey)
+    val scenarios = validateAndGetFromInt(parameters, NumScenariosKey)
+    val endianType = validateAndGetEndianType(parameters)
+    val valueType = validateAndGetValueType(parameters)
+    new MtfCubeRelation(path, times, instruments, scenarios, endianType, valueType, checkCube)(sqlContext)
+  }
+
+  def createRelationWithMetaDataFile(csrPath: String, path: String, checkCube: Boolean, sqlContext: SQLContext): MtfCubeRelation = {
+    val tryMetaData = Try {
+      XML.loadFile(csrPath)
+    }.recoverWith {
+      case throwable => Try(XML.loadString(sqlContext.sparkContext.textFile(csrPath).collect().mkString("\n")))
+    }.recoverWith {
+      case throwable => Failure(InvalidMetaDataException(csrPath, throwable.toString))
+    }
+
+    val tryRelation = tryMetaData.flatMap { root =>
+      Try {
+        val resultInfoProperties = root \ "resultInfo" \ "prop"
+        val maybePrecision = resultInfoProperties
+          .find(node => (node \ "@name").text == "precision")
+          .map(_ \ "@value")
+          .map(_.text)
+        val valueType = maybePrecision match {
+          case Some("Single") => FloatType
+          case Some("Double") => DoubleType
+          case other => throw new InvalidMetaDataException(csrPath, "resultInfo/prop(name=precision) is invalid")
+        }
+        val maybeEndianType = resultInfoProperties
+          .find(node => (node \ "@name").text == "endianType")
+          .map(_ \ "@value")
+          .map(_.text)
+        val endianType = maybeEndianType match {
+          case Some("LittleEndian") => ByteOrdering.LittleEndian
+          case Some("BigEndian") => ByteOrdering.BigEndian
+          case other => throw new InvalidMetaDataException(csrPath, "resultInfo/prop(name=endianType) is invalid")
+        }
+        val timePoints = root \ "timeDimensionInfo" \ "timeList" \ "timePoint"
+        val times = timePoints.map(t => (t \ "@value").text).toIndexedSeq
+        val saDescriptors = root \ "simulatableDimensionInfo" \ "SADescriptor"
+        val instruments = saDescriptors.map(i => (i \ "@id").text).toIndexedSeq
+        val scenarioInfos = root \ "scenarioDimensionInfo" \ "scenarioList" \ "scenarioInfo"
+        val scenarios = scenarioInfos.map(s => (s \ "@name").text).toIndexedSeq
+        new MtfCubeRelation(path, times, instruments, scenarios, endianType, valueType, checkCube)(sqlContext)
+      }
+    }
+
+    tryRelation match {
+      case Success(relation) => relation
+      case Failure(throwable) => throw throwable
     }
   }
 

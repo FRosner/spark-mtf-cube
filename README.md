@@ -5,36 +5,41 @@
 ## Description
 
 Spark data source for [Mark to Future](http://www.cfapubs.org/doi/pdf/10.2469/dig.v31.n1.829) cube binary files.
-It only supports reading, but not writing, data at the moment.
-It is recommended to persist cube data in parquet format if you are writing it back.
+It only supports reading data at the moment, but no writing.
+It is recommended to persist cube data in parquet format if required.
 
 ## Usage
 
 ### Example
 
 ```scala
+val spark = SparkSession.builder.master("local").getOrCreate
 val df = spark.read.format("de.frosner.spark.mtf")
-    .option("numTimes", "1")
-    .option("numInstruments", "1")
-    .option("numScenarios", "1")
-    .option("endianType", "LittleEndian")
-    .option("valueType", "FloatType")
-    .load("src/test/resources/small")
+  .option("csrFile", "src/test/resources/withxml/cube.csr")
+  .load("src/test/resources/withxml/cube.dat.0")
 df.show()
 ```
 
 ### Options
 
+#### Base Options
+
 Option | Description | Possible Values | Default
 --- | --- | ---
+`csrFile` | Path to the meta data XML file. The library will try to load it first from the driver and then from the executors. | local or cluster path | -
 `checkCube` | Verify that the cube has the correct size | {`true`, `false`} | `false`
-`numTimes` | Number of time points simulated* | int > 1 |-
-`numInstruments` | Number of instruments simulated* | int > 1 | -
-`numScenarios` | Number of scenarios simulated* | int > 1 | -
-`endianType` | Byte ordering in the data files* | {`LittleEndian`, `BigEndian`} | -
-`valueType` | Value type of the simulated values* | {`FloatType`, `DoubleType`} | -
 
-* only required if the `cube.csr` meta data file is not available
+#### Additional Options
+
+Option | Description | Possible Values | Default
+--- | --- | ---
+`numTimes`* | Number of time points simulated | int > 1 |-
+`numInstruments`* | Number of instruments simulated | int > 1 | -
+`numScenarios`* | Number of scenarios simulated | int > 1 | -
+`endianType`* | Byte ordering in the data files | {`LittleEndian`, `BigEndian`} | -
+`valueType`* | Value type of the simulated values | {`FloatType`, `DoubleType`} | -
+
+* only used and required if `csrFile` is not specified
 
 ### Schema
 

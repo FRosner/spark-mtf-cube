@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- RiskWatch -->
+<SimResManifest>
+ <versionInfo version="1" />
+ <generatorInfo time="2016/01/01 13:37:00" id="Persistent File" generator="rw" generatorVersion="RiskWatch" config="" />
+ <resultInfo storageId="/data/data.dat">
+  <prop name="instrumentLevel" value="T"/>
+  <prop name="precision" value="Single"/>
+  <prop name="endianType" value="LittleEndian"/>
+ </resultInfo>
+ <cubeInfo numSimulatable="3" numTime="1" numScenario="5" />
+ <cubeletInfo numSimulatable="1" numTime="1" numScenario="5" />
+ <scenarioDimensionInfo nominalScenario="-1">
+  <scenarioList>
+   <scenarioInfo name="Base Scenario" weight="0.0000000000000000" />
+   <scenarioInfo name="MC_1" weight="0.25" />
+   <scenarioInfo name="MC_2" weight="0.25" />
+   <scenarioInfo name="MC_3" weight="0.25" />
+   <scenarioInfo name="MC_4" weight="0.25" />
+  </scenarioList>
+  <scenarioSetConfig crossProduct="False">
+   <scenarioSetInfo name="MC_EQ">
+    <scenarioInfo name="Base Scenario" weight="0.0000000000000000" />
+    <scenarioInfo name="MC_1" weight="0.25" />
+    <scenarioInfo name="MC_2" weight="0.25" />
+    <scenarioInfo name="MC_3" weight="0.25" />
+    <scenarioInfo name="MC_4" weight="0.25" />
+   </scenarioSetInfo>
+  </scenarioSetConfig>
+ </scenarioDimensionInfo>
+ <timeDimensionInfo>
+  <timeList>
+   <timePoint value="2000/01/01 (0)" />
+  </timeList>
+  <customTimeList>
+  </customTimeList>
+ </timeDimensionInfo>
+ <attrDimensionInfo numAttrs="1">
+  <attribute name="Attribute1" type="Scalar"/>
+ </attrDimensionInfo>
+ <simulatableDimensionInfo baseCurrency="EUR">
+  <SADescriptor offset="0" size="4" instrType="Type A" id="Instrument 1" prop="Attribute1" unit="EUR" evalCount="1" />
+  <SADescriptor offset="4" size="4" instrType="Type A" id="Instrument 2" prop="Attribute1" unit="EUR" evalCount="1" />
+  <SADescriptor offset="8" size="4" instrType="Type B" id="Instrument 3" prop="Attribute1" unit="EUR" evalCount="1" />
+ </simulatableDimensionInfo>
+</SimResManifest>
