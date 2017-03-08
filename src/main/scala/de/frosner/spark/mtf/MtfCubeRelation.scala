@@ -1,14 +1,13 @@
 package de.frosner.spark.mtf
 
+import de.frosner.spark.mtf.MtfCubeRelation._
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import org.apache.spark.sql.sources.{BaseRelation, TableScan}
 import org.apache.spark.sql.types._
-import scodec.bits.{BitVector, ByteOrdering}
-import scodec.{Codec, DecodeResult, codecs => Codecs}
+import org.apache.spark.sql.{Row, SQLContext}
 import scodec.Attempt.{Failure, Successful}
-import MtfCubeRelation._
-import org.apache.hadoop.conf.Configuration
+import scodec.bits.{BitVector, ByteOrdering}
+import scodec.{DecodeResult, codecs => Codecs}
 
 case class MtfCubeRelation(location: String,
                            times: IndexedSeq[String],
