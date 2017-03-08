@@ -5,10 +5,12 @@
 ## Description
 
 Spark data source for [Mark to Future](http://www.cfapubs.org/doi/pdf/10.2469/dig.v31.n1.829) cube binary files.
+It only supports reading, but not writing, data at the moment.
+It is recommended to persist cube data in parquet format if you are writing it back.
 
 ## Usage
 
-### Reading Data
+### Example
 
 ```scala
 val df = spark.read.format("de.frosner.spark.mtf")
@@ -20,6 +22,19 @@ val df = spark.read.format("de.frosner.spark.mtf")
     .load("src/test/resources/small")
 df.show()
 ```
+
+### Options
+
+Option | Description | Possible Values | Default
+--- | --- | ---
+`checkCube` | Verify that the cube has the correct size | {`true`, `false`} | `false`
+`numTimes` | Number of time points simulated* | int > 1 |-
+`numInstruments` | Number of instruments simulated* | int > 1 | -
+`numScenarios` | Number of scenarios simulated* | int > 1 | -
+`endianType` | Byte ordering in the data files* | {`LittleEndian`, `BigEndian`} | -
+`valueType` | Value type of the simulated values* | {`FloatType`, `DoubleType`} | -
+
+* only required if the `cube.csr` meta data file is not available
 
 ### Schema
 

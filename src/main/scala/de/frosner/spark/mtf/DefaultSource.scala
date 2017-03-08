@@ -32,7 +32,7 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider {
       val endianType = validateAndGetEndianType(parameters)
       val valueType = validateAndGetValueType(parameters)
       val checkCube = validateAndGetCheckCube(parameters)
-      new MtfCubeRelation(path, times, instruments, scenarios, endianType, valueType)(sqlContext)
+      new MtfCubeRelation(path, times, instruments, scenarios, endianType, valueType, checkCube)(sqlContext)
     }
 
   }
@@ -84,6 +84,16 @@ object DefaultSource {
       case Some("DoubleType") => DoubleType
       case Some(other) => throw new IllegalArgumentException(s"'$parameter' expected to be either FloatType or DoubleType but got '$other'")
       case other => throw new IllegalArgumentException(s"'$parameter' must be specified.")
+    }
+  }
+
+  def validateAndGetCheckCube(parameters: Map[String, String]): Boolean = {
+    val parameter = CheckCubeKey
+    parameters.get(parameter) match {
+      case Some(s) if s.toLowerCase == "true" => true
+      case Some(s) if s.toLowerCase == "false" => false
+      case Some(other) => throw new IllegalArgumentException(s"'$parameter' expected to be either false or true but got '$other'")
+      case None => CheckCubeDefault
     }
   }
 

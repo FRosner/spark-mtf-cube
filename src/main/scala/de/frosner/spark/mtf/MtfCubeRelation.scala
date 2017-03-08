@@ -14,7 +14,8 @@ case class MtfCubeRelation(location: String,
                            instruments: IndexedSeq[String],
                            scenarios: IndexedSeq[String],
                            endianType: ByteOrdering,
-                           valueType: DataType)
+                           valueType: DataType,
+                           checkCubeSize: Boolean)
                      (@transient val sqlContext: SQLContext) extends BaseRelation with TableScan with Serializable {
 
   require(times.nonEmpty, "'times' must not be empty")
@@ -38,7 +39,8 @@ case class MtfCubeRelation(location: String,
 
   override def buildScan(): RDD[Row] = {
     val sparkContext = sqlContext.sparkContext
-    if (valueType == FloatType) {
+    val expectedCubeSize = times.size.toLong * instruments.size.toLong * scenarios.size.toLong
+    val cube = if (valueType == FloatType) {
       val recordWidth = 4
       val byteRecords = sparkContext.binaryRecords(dataLocation, recordWidth, sparkContext.hadoopConfiguration)
       val codec = if (endianType == ByteOrdering.LittleEndian) SerializableCodec.FloatL else SerializableCodec.Float
@@ -53,6 +55,13 @@ case class MtfCubeRelation(location: String,
     } else {
       throw new IllegalStateException(s"Unexpected value type: $valueType")
     }
+    if (checkCubeSize) {
+      val actualCubeSize = cube.count
+      if (actualCubeSize != expectedCubeSize) {
+        throw InvalidCubeSizeException(actualCubeSize, expectedCubeSize)
+      }
+    }
+    cube
   }
 
 }

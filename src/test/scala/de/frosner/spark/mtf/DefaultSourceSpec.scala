@@ -122,6 +122,33 @@ class DefaultSourceSpec extends FlatSpec with Matchers {
     )
   }
 
+  it should "fail if the number of records read does not match the expected cube size" in {
+    val spark = SparkSession.builder.master("local").getOrCreate
+    intercept[InvalidCubeSizeException] {
+      spark.read.format("de.frosner.spark.mtf")
+        .option(DefaultSource.NumTimesKey, "2")
+        .option(DefaultSource.NumInstrumentsKey, "1")
+        .option(DefaultSource.NumScenariosKey, "1")
+        .option(DefaultSource.EndianTypeKey, "LittleEndian")
+        .option(DefaultSource.ValueTypeKey, "FloatType")
+        .option(DefaultSource.CheckCubeKey, "true")
+        .load("src/test/resources/small").count
+    }
+  }
+
+  it should "not fail if the number of records read does not match the expected cube size but the check is disabled" in {
+    val spark = SparkSession.builder.master("local").getOrCreate
+    val cube = spark.read.format("de.frosner.spark.mtf")
+      .option(DefaultSource.NumTimesKey, "2")
+      .option(DefaultSource.NumInstrumentsKey, "1")
+      .option(DefaultSource.NumScenariosKey, "1")
+      .option(DefaultSource.EndianTypeKey, "LittleEndian")
+      .option(DefaultSource.ValueTypeKey, "FloatType")
+      .option(DefaultSource.CheckCubeKey, "false")
+      .load("src/test/resources/small")
+    cube.count shouldBe 1
+  }
+
   "Long input parameter validation" should "validate correctly" in {
     val parameter = "param"
     val parameters = Map(parameter -> "5")

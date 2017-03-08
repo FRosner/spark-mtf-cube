@@ -38,7 +38,8 @@ class MtfCubeRelationSpec extends FlatSpec with Matchers {
       instruments = IndexedSeq("1"),
       scenarios = IndexedSeq("1"),
       endianType = ByteOrdering.LittleEndian,
-      valueType = FloatType
+      valueType = FloatType,
+      checkCubeSize = false
     )(SparkSession.builder().master("local").getOrCreate().sqlContext)
     relation.buildScan().foreach(println)
   }
