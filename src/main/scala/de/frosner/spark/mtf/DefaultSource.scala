@@ -26,12 +26,13 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider {
     if (csrPath.isDefined) {
       ???
     } else {
-      val numTimes = validateAndGetLong(parameters, NumTimesKey)
-      val numInstruments = validateAndGetLong(parameters, NumInstrumentsKey)
-      val numScenarious = validateAndGetLong(parameters, NumScenariosKey)
+      val times = validateAndGetFromInt(parameters, NumTimesKey)
+      val instruments = validateAndGetFromInt(parameters, NumInstrumentsKey)
+      val scenarios = validateAndGetFromInt(parameters, NumScenariosKey)
       val endianType = validateAndGetEndianType(parameters)
       val valueType = validateAndGetValueType(parameters)
-      new MtfCubeRelation(path, numTimes, numInstruments, numScenarious, endianType, valueType)(sqlContext)
+      val checkCube = validateAndGetCheckCube(parameters)
+      new MtfCubeRelation(path, times, instruments, scenarios, endianType, valueType)(sqlContext)
     }
 
   }
@@ -49,12 +50,14 @@ object DefaultSource {
   val NumScenariosKey = "numScenarios"
   val EndianTypeKey = "endianType"
   val ValueTypeKey = "valueType"
+  val CheckCubeKey = "checkCube"
+  val CheckCubeDefault = false
 
-  def validateAndGetLong(parameters: Map[String, String], parameter: String): Long = {
+  def validateAndGetFromInt(parameters: Map[String, String], parameter: String): IndexedSeq[String] = {
     parameters.get(parameter) match {
       case Some(s) =>
-        val tryLong = Try(s.toLong).recoverWith{
-          case throwable => Failure(new IllegalArgumentException(s"'$parameter' expected to be a Long but got '$s'"))
+        val tryLong = Try(s.toInt).map(i => (0 until i).map(_.toString)).recoverWith{
+          case throwable => Failure(new IllegalArgumentException(s"'$parameter' expected to be an integer but got '$s'"))
         }
         tryLong match {
           case Success(l) => l

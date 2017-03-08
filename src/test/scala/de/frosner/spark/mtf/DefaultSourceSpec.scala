@@ -125,14 +125,14 @@ class DefaultSourceSpec extends FlatSpec with Matchers {
   "Long input parameter validation" should "validate correctly" in {
     val parameter = "param"
     val parameters = Map(parameter -> "5")
-    DefaultSource.validateAndGetLong(parameters, parameter) shouldBe 5L
+    DefaultSource.validateAndGetFromInt(parameters, parameter) shouldBe IndexedSeq("0", "1", "2", "3", "4")
   }
 
   it should "throw an exception if the parameter is not present" in {
     val parameter = "param"
     val parameters = Map.empty[String, String]
     intercept[IllegalArgumentException] {
-      DefaultSource.validateAndGetLong(parameters, parameter)
+      DefaultSource.validateAndGetFromInt(parameters, parameter)
     }
   }
 
@@ -140,7 +140,7 @@ class DefaultSourceSpec extends FlatSpec with Matchers {
     val parameter = "param"
     val parameters = Map(parameter -> "dasda")
     intercept[IllegalArgumentException] {
-      DefaultSource.validateAndGetLong(parameters, parameter)
+      DefaultSource.validateAndGetFromInt(parameters, parameter)
     }
   }
 

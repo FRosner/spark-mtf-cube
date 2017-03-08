@@ -34,9 +34,9 @@ class MtfCubeRelationSpec extends FlatSpec with Matchers {
   "Build scan" should "work" in {
     val relation = MtfCubeRelation(
       location = "src/test/resources/small",
-      numTimes = 1,
-      numInstruments = 1,
-      numScenarios = 1,
+      times = IndexedSeq("1"),
+      instruments = IndexedSeq("1"),
+      scenarios = IndexedSeq("1"),
       endianType = ByteOrdering.LittleEndian,
       valueType = FloatType
     )(SparkSession.builder().master("local").getOrCreate().sqlContext)
