@@ -20,6 +20,28 @@ val df = spark.read.format("de.frosner.spark.mtf")
 df.show()
 ```
 
+```
++--------------+------------+-------------+-----+
+|          Time|  Instrument|     Scenario|Value|
++--------------+------------+-------------+-----+
+|2000/01/01 (0)|Instrument 1|Base Scenario|  0.0|
+|2000/01/01 (0)|Instrument 1|         MC_1|  0.0|
+|2000/01/01 (0)|Instrument 1|         MC_2|  0.0|
+|2000/01/01 (0)|Instrument 1|         MC_3|  0.0|
+|2000/01/01 (0)|Instrument 1|         MC_4|  0.0|
+|2000/01/01 (0)|Instrument 2|Base Scenario|  0.0|
+|2000/01/01 (0)|Instrument 2|         MC_1|  0.0|
+|2000/01/01 (0)|Instrument 2|         MC_2|  0.0|
+|2000/01/01 (0)|Instrument 2|         MC_3|  0.0|
+|2000/01/01 (0)|Instrument 2|         MC_4|  0.0|
+|2000/01/01 (0)|Instrument 3|Base Scenario|  0.0|
+|2000/01/01 (0)|Instrument 3|         MC_1|  0.0|
+|2000/01/01 (0)|Instrument 3|         MC_2|  0.0|
+|2000/01/01 (0)|Instrument 3|         MC_3|  0.0|
+|2000/01/01 (0)|Instrument 3|         MC_4|  0.0|
++--------------+------------+-------------+-----+
+```
+
 ### Options
 
 #### Base Options
@@ -41,15 +63,6 @@ Option | Description | Possible Values | Default
 
 * only used and required if `csrFile` is not specified
 
-### Schema
-
-Column | Description
---- | ---
-Time | Simulation time dimension of the cube
-Instrument | Instrument dimension of the cube
-Scenario | Scenario dimension of the cube
-Value | Simulated value
-
 ## Data Source Format
 
 Cube files consist of a meta data file (XML) and a data file (binary encoded sequence of numerics).
@@ -58,7 +71,8 @@ The meta data file needs to be called `cube.csr`, while the data files are calle
 
 ### Meta Data
 
-[TODO]
+The meta data is read from an XML file. This file contains information about the different cube dimensions plus
+additional meta information about the simulation run. An [example file](src/test/resources/withxml/cube.csr) can be found in the test resources.
 
 ### Data
 
