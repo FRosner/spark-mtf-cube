@@ -25,14 +25,14 @@ df.show()
 #### Base Options
 
 Option | Description | Possible Values | Default
---- | --- | ---
+--- | --- | --- | ---
 `csrFile` | Path to the meta data XML file. The library will try to load it first from the driver and then from the executors. | local or cluster path | -
 `checkCube` | Verify that the cube has the correct size | {`true`, `false`} | `false`
 
 #### Additional Options
 
 Option | Description | Possible Values | Default
---- | --- | ---
+--- | --- | --- | ---
 `numTimes`* | Number of time points simulated | int > 1 |-
 `numInstruments`* | Number of instruments simulated | int > 1 | -
 `numScenarios`* | Number of scenarios simulated | int > 1 | -
