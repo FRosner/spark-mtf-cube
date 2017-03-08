@@ -27,7 +27,6 @@ case class MtfCubeRelation(location: String,
 
   @transient val dataLocation = location + "/cube.dat.*"
 
-//  "INSTRUMENT" "SCENARIO" "WEIGHT" "SIMULATION DATE" "VALUE"
   override def schema: StructType = {
     StructType(Seq(
       StructField("Time", StringType, nullable = false),
