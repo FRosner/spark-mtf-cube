@@ -61,7 +61,7 @@ Option | Description | Possible Values | Default
 `endianType`* | Byte ordering in the data files | {`LittleEndian`, `BigEndian`} | -
 `valueType`* | Value type of the simulated values | {`FloatType`, `DoubleType`} | -
 
-* only used and required if `csrFile` is not specified
+\* only used and required if `csrFile` is not specified
 
 ## Data Source Format
 
