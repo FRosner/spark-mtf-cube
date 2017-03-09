@@ -70,7 +70,23 @@ Cube files consist of a meta data file (XML) and a data file (binary encoded seq
 ### Meta Data
 
 The meta data is read from an XML file. This file contains information about the different cube dimensions plus
-additional meta information about the simulation run. An [example file](src/test/resources/withxml/cube.csr) can be found in the test resources.
+additional meta information about the simulation run.
+
+#### File Structure
+
+Currently the following entries are parsed from the XML tree:
+
+Node | Property
+--- | ---
+`/resultInfo/prop(name=precision)` | value type
+`/resultInfo/prop(name=endianType)` | byte ordering of values
+`/timeDimensionInfo/timeList/timePoint` | time dimensions
+`/simulatableDimensionInfo/SADescriptor` | instrument dimensions
+`/scenarioDimensionInfo/scenarioList/scenarioInfo` | scenario dimensions
+
+#### Example
+
+An [example file](src/test/resources/withxml/cube.csr) can be found in the test resources.
 
 ### Data
 
