@@ -66,8 +66,6 @@ Option | Description | Possible Values | Default
 ## Data Source Format
 
 Cube files consist of a meta data file (XML) and a data file (binary encoded sequence of numerics).
-All files are expected to be located in the same folder without any subdirectories.
-The meta data file needs to be called `cube.csr`, while the data files are called `cube.dat.*`.
 
 ### Meta Data
 
