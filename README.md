@@ -102,7 +102,7 @@ Given three instruments, two scenarios and two times, the structure looks as fol
 
 ![x_t1i1s1 x_t1i1s2 x_t1i2s1 ... x_t2i3s2](http://mathurl.com/jmnj95m.png)
 
-#### Example
+#### Command Line Inspection
 
 ```sh
 od -f cube.dat.0 | head
