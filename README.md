@@ -21,25 +21,25 @@ df.show()
 ```
 
 ```
-+--------------+------------+-------------+-----+
-|          Time|  Instrument|     Scenario|Value|
-+--------------+------------+-------------+-----+
-|2000/01/01 (0)|Instrument 1|Base Scenario|  0.0|
-|2000/01/01 (0)|Instrument 1|         MC_1|  0.0|
-|2000/01/01 (0)|Instrument 1|         MC_2|  0.0|
-|2000/01/01 (0)|Instrument 1|         MC_3|  0.0|
-|2000/01/01 (0)|Instrument 1|         MC_4|  0.0|
-|2000/01/01 (0)|Instrument 2|Base Scenario|  0.0|
-|2000/01/01 (0)|Instrument 2|         MC_1|  0.0|
-|2000/01/01 (0)|Instrument 2|         MC_2|  0.0|
-|2000/01/01 (0)|Instrument 2|         MC_3|  0.0|
-|2000/01/01 (0)|Instrument 2|         MC_4|  0.0|
-|2000/01/01 (0)|Instrument 3|Base Scenario|  0.0|
-|2000/01/01 (0)|Instrument 3|         MC_1|  0.0|
-|2000/01/01 (0)|Instrument 3|         MC_2|  0.0|
-|2000/01/01 (0)|Instrument 3|         MC_3|  0.0|
-|2000/01/01 (0)|Instrument 3|         MC_4|  0.0|
-+--------------+------------+-------------+-----+
++--------------+------------+--------------------+--------+-------------+-----+
+|          Time|BaseCurrency|          Instrument|Currency|     Scenario|Value|
++--------------+------------+--------------------+--------+-------------+-----+
+|2000/01/01 (0)|         EUR|[Instrument 1,Typ...|    null|Base Scenario|  0.0|
+|2000/01/01 (0)|         EUR|[Instrument 1,Typ...|    null|         MC_1|  0.0|
+|2000/01/01 (0)|         EUR|[Instrument 1,Typ...|    null|         MC_2|  0.0|
+|2000/01/01 (0)|         EUR|[Instrument 2,Typ...|    null|Base Scenario|  0.0|
+|2000/01/01 (0)|         EUR|[Instrument 2,Typ...|    null|         MC_1|  0.0|
+|2000/01/01 (0)|         EUR|[Instrument 2,Typ...|    null|         MC_2|  0.0|
+|2000/01/01 (0)|         EUR|                null|    CUR1|Base Scenario|  0.0|
+|2000/01/01 (0)|         EUR|                null|    CUR1|         MC_1|  0.0|
+|2000/01/01 (0)|         EUR|                null|    CUR1|         MC_2|  0.0|
+|2000/01/01 (0)|         EUR|                null|    CUR2|Base Scenario|  0.0|
+|2000/01/01 (0)|         EUR|                null|    CUR2|         MC_1|  0.0|
+|2000/01/01 (0)|         EUR|                null|    CUR2|         MC_2|  0.0|
+|2000/01/01 (0)|         EUR|                null|    CUR3|Base Scenario|  0.0|
+|2000/01/01 (0)|         EUR|                null|    CUR3|         MC_1|  0.0|
+|2000/01/01 (0)|         EUR|                null|    CUR3|         MC_2|  0.0|
++--------------+------------+--------------------+--------+-------------+-----+
 ```
 
 ### Options
@@ -62,6 +62,30 @@ Option | Description | Possible Values | Default
 `valueType`* | Value type of the simulated values | {`FloatType`, `DoubleType`} | -
 
 \* only used and required if `csrFile` is not specified
+
+### Schema
+
+```
+root
+ |-- Time: string (nullable = false)
+ |-- BaseCurrency: string (nullable = false)
+ |-- Instrument: struct (nullable = true)
+ |    |-- ID: string (nullable = false)
+ |    |-- InstrType: string (nullable = false)
+ |    |-- Unit: string (nullable = false)
+ |-- Currency: string (nullable = true)
+ |-- Scenario: string (nullable = false)
+ |-- Value: float (nullable = false)
+```
+
+Column | Description
+--- | ---
+Time | Simulation time dimension of the cube
+BaseCurrency | Base currency of the simulation
+Instrument | Simulated instrument dimension if the simulatable dimension is an instrument, else null
+Currency | Simulated currency dimension if the simulatable dimension is a currency, else null
+Scenario | Scenario dimension of the cube
+Value | Simulated value
 
 ## Data Source Format
 

@@ -35,14 +35,15 @@ class MtfCubeRelationSpec extends FlatSpec with Matchers {
     val relation = MtfCubeRelation(
       location = "src/test/resources/small",
       times = IndexedSeq("1"),
-      instruments = IndexedSeq("1"),
+      simulatableDimensions = IndexedSeq(Left(Instrument("1", "t", "c"))),
       scenarios = IndexedSeq("1"),
+      baseCurrency = "EUR",
       endianType = ByteOrdering.LittleEndian,
       valueType = FloatType,
       checkCubeSize = false
     )(SparkSession.builder().master("local").getOrCreate().sqlContext)
     relation.buildScan().collect shouldBe Array(
-      Row.fromSeq(Seq("1", "1", "1", 0f))
+      Row.fromSeq(Seq("1", "EUR", Row.fromSeq(Seq("1", "t", "c")), null, "1", 0f))
     )
   }
 
