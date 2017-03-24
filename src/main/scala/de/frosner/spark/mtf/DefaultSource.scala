@@ -10,10 +10,11 @@ import org.apache.spark.sql.sources.{BaseRelation, Filter, RelationProvider, Sch
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 import DefaultSource._
+import de.frosner.spark.mtf.MtfCubeRelation.Currency
 import scodec.bits.ByteOrdering
 
 import scala.util.{Failure, Success, Try}
-import scala.xml.XML
+import scala.xml.{Elem, XML}
 
 
 class DefaultSource extends RelationProvider with SchemaRelationProvider {
@@ -66,6 +67,22 @@ object DefaultSource {
     }
   }
 
+  def validateAndGetInstruments(parameters: Map[String, String], parameter: String): IndexedSeq[Either[Instrument, Currency]] = {
+    parameters.get(parameter) match {
+      case Some(s) =>
+        val tryLong = Try(s.toInt).map{
+          i => (0 until i).map(id => Left(Instrument(id.toString, "t", "cur")))
+        }.recoverWith{
+          case throwable => Failure(new IllegalArgumentException(s"'$parameter' expected to be an integer but got '$s'"))
+        }
+        tryLong match {
+          case Success(l) => l
+          case Failure(throwable) => throw throwable
+        }
+      case other => throw new IllegalArgumentException(s"'$parameter' must be specified.")
+    }
+  }
+
   def validateAndGetEndianType(parameters: Map[String, String]): ByteOrdering = {
     val parameter = EndianTypeKey
     parameters.get(parameter) match {
@@ -98,11 +115,12 @@ object DefaultSource {
 
   def createRelationWithoutMetaDataFile(parameters: Map[String, String], path: String, checkCube: Boolean, sqlContext: SQLContext): MtfCubeRelation = {
     val times = validateAndGetFromInt(parameters, NumTimesKey)
-    val instruments = validateAndGetFromInt(parameters, NumInstrumentsKey)
+    val instruments = validateAndGetInstruments(parameters, NumInstrumentsKey)
     val scenarios = validateAndGetFromInt(parameters, NumScenariosKey)
     val endianType = validateAndGetEndianType(parameters)
     val valueType = validateAndGetValueType(parameters)
-    new MtfCubeRelation(path, times, instruments, scenarios, endianType, valueType, checkCube)(sqlContext)
+    val baseCurrency = "EUR"
+    new MtfCubeRelation(path, times, instruments, scenarios, baseCurrency, endianType, valueType, checkCube)(sqlContext)
   }
 
   def createRelationWithMetaDataFile(csrPath: String, path: String, checkCube: Boolean, sqlContext: SQLContext): MtfCubeRelation = {
@@ -137,11 +155,23 @@ object DefaultSource {
         }
         val timePoints = root \ "timeDimensionInfo" \ "timeList" \ "timePoint"
         val times = timePoints.map(t => (t \ "@value").text).toIndexedSeq
-        val saDescriptors = root \ "simulatableDimensionInfo" \ "SADescriptor"
-        val instruments = saDescriptors.map(i => (i \ "@id").text).toIndexedSeq
+        val simulatableDimensionInfo = root \ "simulatableDimensionInfo"
+        val baseCurrency = (simulatableDimensionInfo \ "@baseCurrency").text
+        val simulatableDimensions: IndexedSeq[Either[Instrument, Currency]] = simulatableDimensionInfo(0).child.collect {
+          case dimension: Elem =>
+            dimension.label match {
+              case "SADescriptor" => Left(Instrument(
+                id = (dimension \ "@id").text,
+                instrType = (dimension \ "@instrType").text,
+                unit = (dimension \ "@unit").text
+              ))
+              case "FXDescriptor" => Right((dimension \ "@currency").text)
+              case default => throw InvalidMetaDataException(csrPath, s"Unrecognized simulatable dimension: $default")
+            }
+        }.toIndexedSeq
         val scenarioInfos = root \ "scenarioDimensionInfo" \ "scenarioList" \ "scenarioInfo"
         val scenarios = scenarioInfos.map(s => (s \ "@name").text).toIndexedSeq
-        new MtfCubeRelation(path, times, instruments, scenarios, endianType, valueType, checkCube)(sqlContext)
+        new MtfCubeRelation(path, times, simulatableDimensions, scenarios, baseCurrency, endianType, valueType, checkCube)(sqlContext)
       }
     }
 

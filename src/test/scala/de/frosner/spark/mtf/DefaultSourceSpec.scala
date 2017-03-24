@@ -32,7 +32,7 @@ class DefaultSourceSpec extends FlatSpec with Matchers {
     df.count() shouldBe 4
   }
 
-  it should "assign the dimensions correctly (more times)" in {
+  it should "assign the dimensions correctly" in {
     val spark = SparkSession.builder.master("local").getOrCreate
     val df = spark.read.format("de.frosner.spark.mtf")
       .option(DefaultSource.NumTimesKey, "4")
@@ -41,84 +41,27 @@ class DefaultSourceSpec extends FlatSpec with Matchers {
       .option(DefaultSource.EndianTypeKey, "BigEndian")
       .option(DefaultSource.ValueTypeKey, "DoubleType")
       .load("src/test/resources/big/cube.dat.0")
-    val result = df.select("Time", "Instrument", "Scenario").collect()
+    val instrument1 = Row.fromSeq(Seq("0", "t", "cur"))
+    val instrument2 = Row.fromSeq(Seq("1", "t", "cur"))
+    val baseCurrency = "EUR"
+    val result = df.select("Time", "BaseCurrency", "Instrument", "Scenario").collect()
     result shouldBe Array(
-      Row.fromSeq(Seq("0", "0", "0")),
-      Row.fromSeq(Seq("0", "0", "1")),
-      Row.fromSeq(Seq("0", "1", "0")),
-      Row.fromSeq(Seq("0", "1", "1")),
-      Row.fromSeq(Seq("1", "0", "0")),
-      Row.fromSeq(Seq("1", "0", "1")),
-      Row.fromSeq(Seq("1", "1", "0")),
-      Row.fromSeq(Seq("1", "1", "1")),
-      Row.fromSeq(Seq("2", "0", "0")),
-      Row.fromSeq(Seq("2", "0", "1")),
-      Row.fromSeq(Seq("2", "1", "0")),
-      Row.fromSeq(Seq("2", "1", "1")),
-      Row.fromSeq(Seq("3", "0", "0")),
-      Row.fromSeq(Seq("3", "0", "1")),
-      Row.fromSeq(Seq("3", "1", "0")),
-      Row.fromSeq(Seq("3", "1", "1"))
-    )
-  }
-
-  it should "assign the dimensions correctly (more instruments)" in {
-    val spark = SparkSession.builder.master("local").getOrCreate
-    val df = spark.read.format("de.frosner.spark.mtf")
-      .option(DefaultSource.NumTimesKey, "2")
-      .option(DefaultSource.NumInstrumentsKey, "4")
-      .option(DefaultSource.NumScenariosKey, "2")
-      .option(DefaultSource.EndianTypeKey, "BigEndian")
-      .option(DefaultSource.ValueTypeKey, "DoubleType")
-      .load("src/test/resources/big/cube.dat.0")
-    val result = df.select("Time", "Instrument", "Scenario").collect()
-    result shouldBe Array(
-      Row.fromSeq(Seq("0", "0", "0")),
-      Row.fromSeq(Seq("0", "0", "1")),
-      Row.fromSeq(Seq("0", "1", "0")),
-      Row.fromSeq(Seq("0", "1", "1")),
-      Row.fromSeq(Seq("0", "2", "0")),
-      Row.fromSeq(Seq("0", "2", "1")),
-      Row.fromSeq(Seq("0", "3", "0")),
-      Row.fromSeq(Seq("0", "3", "1")),
-      Row.fromSeq(Seq("1", "0", "0")),
-      Row.fromSeq(Seq("1", "0", "1")),
-      Row.fromSeq(Seq("1", "1", "0")),
-      Row.fromSeq(Seq("1", "1", "1")),
-      Row.fromSeq(Seq("1", "2", "0")),
-      Row.fromSeq(Seq("1", "2", "1")),
-      Row.fromSeq(Seq("1", "3", "0")),
-      Row.fromSeq(Seq("1", "3", "1"))
-    )
-  }
-
-  it should "assign the dimensions correctly (more scenarios)" in {
-    val spark = SparkSession.builder.master("local").getOrCreate
-    val df = spark.read.format("de.frosner.spark.mtf")
-      .option(DefaultSource.NumTimesKey, "2")
-      .option(DefaultSource.NumInstrumentsKey, "2")
-      .option(DefaultSource.NumScenariosKey, "4")
-      .option(DefaultSource.EndianTypeKey, "BigEndian")
-      .option(DefaultSource.ValueTypeKey, "DoubleType")
-      .load("src/test/resources/big/cube.dat.0")
-    val result = df.select("Time", "Instrument", "Scenario").collect()
-    result shouldBe Array(
-      Row.fromSeq(Seq("0", "0", "0")),
-      Row.fromSeq(Seq("0", "0", "1")),
-      Row.fromSeq(Seq("0", "0", "2")),
-      Row.fromSeq(Seq("0", "0", "3")),
-      Row.fromSeq(Seq("0", "1", "0")),
-      Row.fromSeq(Seq("0", "1", "1")),
-      Row.fromSeq(Seq("0", "1", "2")),
-      Row.fromSeq(Seq("0", "1", "3")),
-      Row.fromSeq(Seq("1", "0", "0")),
-      Row.fromSeq(Seq("1", "0", "1")),
-      Row.fromSeq(Seq("1", "0", "2")),
-      Row.fromSeq(Seq("1", "0", "3")),
-      Row.fromSeq(Seq("1", "1", "0")),
-      Row.fromSeq(Seq("1", "1", "1")),
-      Row.fromSeq(Seq("1", "1", "2")),
-      Row.fromSeq(Seq("1", "1", "3"))
+      Row.fromSeq(Seq("0", baseCurrency, instrument1, "0")),
+      Row.fromSeq(Seq("0", baseCurrency, instrument1, "1")),
+      Row.fromSeq(Seq("0", baseCurrency, instrument2, "0")),
+      Row.fromSeq(Seq("0", baseCurrency, instrument2, "1")),
+      Row.fromSeq(Seq("1", baseCurrency, instrument1, "0")),
+      Row.fromSeq(Seq("1", baseCurrency, instrument1, "1")),
+      Row.fromSeq(Seq("1", baseCurrency, instrument2, "0")),
+      Row.fromSeq(Seq("1", baseCurrency, instrument2, "1")),
+      Row.fromSeq(Seq("2", baseCurrency, instrument1, "0")),
+      Row.fromSeq(Seq("2", baseCurrency, instrument1, "1")),
+      Row.fromSeq(Seq("2", baseCurrency, instrument2, "0")),
+      Row.fromSeq(Seq("2", baseCurrency, instrument2, "1")),
+      Row.fromSeq(Seq("3", baseCurrency, instrument1, "0")),
+      Row.fromSeq(Seq("3", baseCurrency, instrument1, "1")),
+      Row.fromSeq(Seq("3", baseCurrency, instrument2, "0")),
+      Row.fromSeq(Seq("3", baseCurrency, instrument2, "1"))
     )
   }
 
@@ -149,36 +92,71 @@ class DefaultSourceSpec extends FlatSpec with Matchers {
     cube.count shouldBe 1
   }
 
-  "Reading the meta data XML" should "work" in {
+  "Reading the meta data XML" should "work if there are only instruments" in {
     val spark = SparkSession.builder.master("local").getOrCreate
     val df = spark.read.format("de.frosner.spark.mtf")
-      .option("csrFile", "src/test/resources/withxml/cube.csr")
-      .load("src/test/resources/withxml/cube.dat.0")
+      .option("csrFile", "src/test/resources/withxmlonlyinstruments/cube.csr")
+      .load("src/test/resources/withxmlonlyinstruments/cube.dat.0")
     val scenario1 = "Base Scenario"
     val scenario2 = "MC_1"
     val scenario3 = "MC_2"
     val scenario4 = "MC_3"
     val scenario5 = "MC_4"
-    val instrument1 = "Instrument 1"
-    val instrument2 = "Instrument 2"
-    val instrument3 = "Instrument 3"
+    val instrument1 = Row.fromSeq(Seq("Instrument 1", "Type A", "EUR"))
+    val instrument2 = Row.fromSeq(Seq("Instrument 2", "Type A", "EUR"))
+    val instrument3 = Row.fromSeq(Seq("Instrument 3", "Type B", "EUR"))
+    val time1 = "2000/01/01 (0)"
+    val baseCurrency = "EUR"
+    df.collect shouldBe Array(
+      Row.fromSeq(Seq(time1, baseCurrency, instrument1, null, scenario1, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, instrument1, null, scenario2, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, instrument1, null, scenario3, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, instrument1, null, scenario4, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, instrument1, null, scenario5, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, instrument2, null, scenario1, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, instrument2, null, scenario2, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, instrument2, null, scenario3, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, instrument2, null, scenario4, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, instrument2, null, scenario5, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, instrument3, null, scenario1, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, instrument3, null, scenario2, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, instrument3, null, scenario3, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, instrument3, null, scenario4, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, instrument3, null, scenario5, 0f))
+    )
+  }
+
+  it should "work if there are instruments and currencies" in {
+    val spark = SparkSession.builder.master("local").getOrCreate
+    val df = spark.read.format("de.frosner.spark.mtf")
+      .option("csrFile", "src/test/resources/withxml/cube.csr")
+      .load("src/test/resources/withxmlonlyinstruments/cube.dat.0")
+    val scenario1 = "Base Scenario"
+    val scenario2 = "MC_1"
+    val scenario3 = "MC_2"
+    val instrument1 = Row.fromSeq(Seq("Instrument 1", "Type A", "EUR"))
+    val instrument2 = Row.fromSeq(Seq("Instrument 2", "Type A", "EUR"))
+    val baseCurrency = "EUR"
+    val currency1 = "CUR1"
+    val currency2 = "CUR2"
+    val currency3 = "CUR3"
     val time1 = "2000/01/01 (0)"
     df.collect shouldBe Array(
-      Row.fromSeq(Seq(time1, instrument1, scenario1, 0f)),
-      Row.fromSeq(Seq(time1, instrument1, scenario2, 0f)),
-      Row.fromSeq(Seq(time1, instrument1, scenario3, 0f)),
-      Row.fromSeq(Seq(time1, instrument1, scenario4, 0f)),
-      Row.fromSeq(Seq(time1, instrument1, scenario5, 0f)),
-      Row.fromSeq(Seq(time1, instrument2, scenario1, 0f)),
-      Row.fromSeq(Seq(time1, instrument2, scenario2, 0f)),
-      Row.fromSeq(Seq(time1, instrument2, scenario3, 0f)),
-      Row.fromSeq(Seq(time1, instrument2, scenario4, 0f)),
-      Row.fromSeq(Seq(time1, instrument2, scenario5, 0f)),
-      Row.fromSeq(Seq(time1, instrument3, scenario1, 0f)),
-      Row.fromSeq(Seq(time1, instrument3, scenario2, 0f)),
-      Row.fromSeq(Seq(time1, instrument3, scenario3, 0f)),
-      Row.fromSeq(Seq(time1, instrument3, scenario4, 0f)),
-      Row.fromSeq(Seq(time1, instrument3, scenario5, 0f))
+      Row.fromSeq(Seq(time1, baseCurrency, instrument1, null, scenario1, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, instrument1, null, scenario2, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, instrument1, null, scenario3, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, instrument2, null, scenario1, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, instrument2, null, scenario2, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, instrument2, null, scenario3, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, null, currency1, scenario1, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, null, currency1, scenario2, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, null, currency1, scenario3, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, null, currency2, scenario1, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, null, currency2, scenario2, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, null, currency2, scenario3, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, null, currency3, scenario1, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, null, currency3, scenario2, 0f)),
+      Row.fromSeq(Seq(time1, baseCurrency, null, currency3, scenario3, 0f))
     )
   }
 
